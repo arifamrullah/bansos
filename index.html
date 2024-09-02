@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bansos LPM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="d-flex">
+                <form method="post" action="result.html" @submit.prevent="handleSubmit">
+                    <div>
+                        <label class="form-label" for="nama">Nama</label>
+                        <input class="form-control" type="text" name="nama" id="nama" v-model="nama" required>
+                        <label class="form-label text-danger fw-bold" for="nama" v-if="namaError">Nama wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="nik">NIK</label>
+                        <input class="form-control" type="number" name="nik" id="nik" v-model="nik" @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="nik" v-if="nikError">NIK wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="nkk">Nomor Kartu Keluarga</label>
+                        <input class="form-control" type="number" name="nkk" id="nkk" v-model="nkk" @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="nkk" v-if="nkkError">Nomor Kartu Keluarga wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="ktp">Foto KTP</label>
+                        <input class="form-control" type="file" accept="image/jpg, image/jpeg, image/png, image/bmp" name="ktp" id="ktp" ref="ktp" @change="ktpChange" required>
+                        <label class="form-label text-danger fw-bold" for="ktp" v-if="ktpError">Foto KTP wajib diupload</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="kk">Foto Kartu Keluarga</label>
+                        <input class="form-control" type="file" accept="image/jpg, image/jpeg, image/png, image/bmp" name="kk" id="kk" ref="kk" @change="kkChange" required>
+                        <label class="form-label text-danger fw-bold" for="kk" v-if="kkError">Foto KK wajib diupload</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="umur">Umur</label>
+                        <input class="form-control" type="number" min="25" name="umur" id="umur" v-model="umur" @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="umur" v-if="umurError">Umur wajib diisi</label>
+                        <label class="form-label text-danger fw-bold" for="umur" v-if="umurMin">Umur tidak boleh kurang dari 25 tahun</label>
+                    </div>
+                    <div>Jenis Kelamin</div>
+                    <div v-for="gender in genders">
+                        <input type="radio" name="jenis_kelamin" :id="gender.toLowerCase()" :value="gender" v-model="jenis_kelamin" @change="jenisKelaminChange" required>
+                        <label :for="gender.toLowerCase()">{{gender}}</label>
+                    </div>
+                    <label class="form-label text-danger fw-bold" for="jenis_kelamin" v-if="jenisKelaminError">Jenis kelamin wajib dipilih</label>
+                    <div>
+                        <label class="form-label" for="provinsi">Provinsi</label>
+                        <input class="form-control" type="text" name="provinsi" list="provinces" id="provinsi" v-model="provinsi" @change="provinsiChange" required>
+                        <datalist id="provinces">
+                            <option v-for="province in provinces" :data-id="province.id" :value="province.name"></option>
+                        </datalist>
+                        <label class="form-label text-danger fw-bold" for="provinsi" v-if="provinsiError">Provinsi wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="kota">Kab/Kota</label>
+                        <input class="form-control" type="text" name="kota" list="regencies" id="kota" v-model="kota" ref="kota" @change="kotaChange" required>
+                        <datalist id="regencies">
+                            <option v-for="regency in regencies" :data-id="regency.id" :value="regency.name"></option>
+                        </datalist>
+                        <label class="form-label text-danger fw-bold" for="kota" v-if="kotaError">Kab/Kota wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="kecamatan">Kecamatan</label>
+                        <input class="form-control" type="text" name="kecamatan" list="districts" id="kecamatan" v-model="kecamatan" ref="kecamatan" @change="kecamatanChange" required>
+                        <datalist id="districts">
+                            <option v-for="district in districts" :data-id="district.id" :value="district.name"></option>
+                        </datalist>
+                        <label class="form-label text-danger fw-bold" for="kecamatan" v-if="kecamatanError">Kecamatan wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="kelurahan">Kelurahan/Desa</label>
+                        <input class="form-control" type="text" name="kelurahan" list="villages" id="kelurahan" v-model="kelurahan" ref="kelurahan" required>
+                        <datalist id="villages">
+                            <option v-for="village in villages" :data-id="village.id" :value="village.name"></option>
+                        </datalist>
+                        <label class="form-label text-danger fw-bold" for="kelurahan" v-if="kelurahanError">Kelurahan/Desa wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="alamat">Alamat</label>
+                        <textarea class="form-control" maxlength="255" name="alamat" id="alamat" v-model="alamat" required></textarea>
+                        <label class="form-label text-danger fw-bold" for="alamat" v-if="alamatError">Alamat wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="rt">RT</label>
+                        <input class="form-control" type="number" name="rt" id="rt" v-model="rt" @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="rt" v-if="rtError">RT wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="rw">RW</label>
+                        <input class="form-control" type="number" name="rw" id="rw" v-model="rw" @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="rw" v-if="rwError">RW wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="penghasilan_sebelum">Penghasilan sebelum pandemi</label>
+                        <input class="form-control" type="number" name="penghasilan_sebelum" id="penghasilan_sebelum" v-model="penghasilan_sebelum" @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="penghasilan_sebelum" v-if="penghasilanSebelumError">Penghasilan sebelum pandemi wajib diisi</label>
+                    </div>
+                    <div>
+                        <label class="form-label" for="penghasilan_sesudah">Penghasilan sesudah pandemi</label>
+                        <input class="form-control" type="number" name="penghasilan_sesudah" id="penghasilan_sesudah" v-model="penghasilan_sesudah"  @keydown="onlyNumbers" required>
+                        <label class="form-label text-danger fw-bold" for="penghasilan_sesudah" v-if="penghasilanSesudahError">Penghasilan sesudah pandemi wajib diisi</label>
+                    </div>
+                    <div>Alasan membutuhkan bantuan</div>
+                    <div v-for="(reason, index) in reasons">
+                        <input type="checkbox" name="alasan[]" :id="index" :value="reason" v-model="alasan" ref="alasan" @change="alasanCheckbox" :required="required">
+                        <label :for="index">{{reason}}</label>
+                    </div>
+                    <input type="text" name="text_lainnya" id="text_lainnya" v-model="text_lainnya" ref="text_lainnya" @input="lainnyaText">
+                    <label class="form-label text-danger fw-bold" for="alasan" v-if="alasanError">Alasan wajib dipilih/diisi</label>
+                    <label class="form-label text-danger fw-bold" for="text_lainnya" v-if="textLainnyaError">Alasan wajib dipilih/diisi</label>
+                    <div>
+                        <input type="checkbox" name="konfirmasi" id="konfirmasi" v-model="konfirmasi" @change="konfirmasiCheckbox" required>“Saya menyatakan bahwa data yang diisikan adalah benar dan siap mempertanggungjawabkan apabila ditemukan ketidaksesuaian dalam data tersebut.”<br>
+                        <label class="form-label text-danger fw-bold" for="konfirmasi" v-if="konfirmasiError">Mohon centang kolom pernyataan</label>
+                    </div>
+                    <div class="mt-3">
+                        <input class="form-control btn btn-primary" type="submit" value="Submit" @click="formErrorConfimation">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+        createApp({
+            data() {
+                return {
+                    nama : '', nik : '', nkk : '', ktp : '', kk : '', umur : '', jenis_kelamin : '', provinsi : '', kota : '', kecamatan : '', kelurahan : '', alamat : '', rt : '', rw : '', penghasilan_sebelum : '', penghasilan_sesudah : '', alasan : [], text_lainnya : '', konfirmasi : '',
+                    provinces : '', regencies : '', districts : '', villages : '',
+                    genders : ['Laki-laki', 'Perempuan'],
+                    reasons : ['Kehilangan pekerjaan', 'Kepala keluarga', 'Tergolong fakir/miskin', 'Lainnya'],
+                    required : true,
+                    namaError : false, nikError : false, nkkError : false, ktpError : false, kkError : false, umurError : false, umurMin : false, jenisKelaminError : false, provinsiError : false, kotaError : false, kecamatanError : false, kelurahanError : false, alamatError : false, rtError : false, rwError : false, penghasilanSebelumError : false, penghasilanSesudahError : false, alasanError : false, textLainnyaError : false
+                }
+            },
+            watch : {
+                nama(value) { if (!value) { this.namaError = true } else { this.namaError = false } },
+                nik(value) { if (!value) { this.nikError = true } else { this.nikError = false } },
+                nkk(value) { if (!value) { this.nkkError = true } else { this.nkkError = false } },
+                umur(value) {
+                    if (!value) {
+                        this.umurError = true
+                        this.umurMin = false
+                    } else {
+                        this.umurError = false
+                        if (value < 25) {
+                            this.umurMin = true
+                        } else {
+                            this.umurMin = false
+                        }
+                    }
+                },
+                provinsi(value) { if (!value) { this.provinsiError = true } else { this.provinsiError = false } },
+                kota(value) { if (!value) { this.kotaError = true } else { this.kotaError = false } },
+                kecamatan(value) { if (!value) { this.kecamatanError = true } else { this.kecamatanError = false } },
+                kelurahan(value) { if (!value) { this.kelurahanError = true } else { this.kelurahanError = false } },
+                alamat(value) { if (!value) { this.alamatError = true } else { this.alamatError = false } },
+                rt(value) { if (!value) { this.rtError = true } else { this.rtError = false } },
+                rw(value) { if (!value) { this.rwError = true } else { this.rwError = false } },
+                penghasilan_sebelum(value) { if (!value) { this.penghasilanSebelumError = true } else { this.penghasilanSebelumError = false } },
+                penghasilan_sesudah(value) { if (!value) { this.penghasilanSesudahError = true } else { this.penghasilanSesudahError = false } },
+            },
+            beforeMount() {
+                fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json`)
+                    .then(response => response.json())
+                    .then(provinces => {
+                        this.provinces = provinces
+                    })
+            },
+            methods : {
+                onlyNumbers(e) {
+                    e.key === '-' || e.key === '+' || e.key === '.' || e.key === ',' || e.key === 'e' ? e.preventDefault() : null
+                },
+                ktpChange(e) {
+                    const image = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.readAsDataURL(image);
+                    reader.onload = e =>{
+                        this.previewImage = e.target.result;
+                        console.log(this.previewImage);
+                    }
+
+                    const file = this.$refs.ktp.files[0]
+
+                    if (!file) {
+                        this.ktpError = true
+                        e.preventDefault()
+                        alert('Tidak ada gambar yang dipilih')
+                        return
+                    } else {
+                        this.ktpError = false
+                    }
+                    
+                    if (file.size > 2000000) {
+                        this.ktpError = true
+                        e.preventDefault()
+                        alert('Ukuran gambar maksimal 2MB')
+                        this.$refs.ktp.value = ''
+                        return
+                    }
+                },
+                kkChange(e) {
+                    const file = this.$refs.kk.files[0]
+
+                    if (!file) {
+                        this.kkError = true
+                        e.preventDefault()
+                        alert('Tidak ada gambar yang dipilih')
+                        return
+                    } else {
+                        this.kkError = false
+                    }
+                    
+                    if (file.size > 2000000) {
+                        this.kkError = true
+                        e.preventDefault()
+                        alert('Ukuran gambar maksimal 2MB')
+                        this.$refs.kk.value = ''
+                        return
+                    }
+                },
+                jenisKelaminChange(item) {
+                    if (item.target.checked) {
+                        this.jenisKelaminError = false
+                    }
+                },
+                provinsiChange(item) {
+                    if (!item.target.value) {
+                        const city_id = $("#provinces option[value='" + $('#provinsi').val() + "']").attr('data-id')
+                        
+                        fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${city_id}.json`)
+                        .then(response => response.json())
+                        .then(regencies => {
+                            this.regencies = regencies
+                        });
+                    }
+                },
+                kotaChange(item) {
+                    if (!item.target.value) {
+                        const district_id = $("#regencies option[value='" + $('#kota').val() + "']").attr('data-id')
+                        
+                        fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${district_id}.json`)
+                        .then(response => response.json())
+                        .then(districts => {
+                            this.districts = districts
+                        });
+                    }
+                },
+                kecamatanChange(item) {
+                    if (!item.target.value) {
+                        const subdistrict_id = $("#districts option[value='" + $('#kecamatan').val() + "']").attr('data-id')
+
+                        fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${subdistrict_id}.json`)
+                            .then(response => response.json())
+                            .then(villages => {
+                                this.villages = villages
+                            });
+                    }
+                },
+                alasanCheckbox() {
+                    var length_alasan = this.$refs.alasan.length
+
+                    if ($('input[name="alasan[]"]').is(":checked")) {
+                        this.alasanError = false
+                        if ($('input[value="Lainnya"]').is(":checked")) {
+                            this.$refs.text_lainnya.focus()
+                        }
+                        for (var i = 0; i < length_alasan; i++) {
+                            this.$refs.alasan[i].required = false
+                        }
+                    } else {
+                        this.alasanError = true
+                        for (var i = 0; i < length_alasan; i++) {
+                            this.$refs.alasan[i].required = true
+                        }
+                    }
+                },
+                lainnyaText() {
+                    this.$refs.lainnya.checked = true
+                },
+                konfirmasiCheckbox(item) {
+                    if (item.target.checked) {
+                        this.konfirmasiError = false
+                    }
+                    console.log(item.target.checked)
+                },
+                formErrorConfimation() {
+                    if (!this.nama) { this.namaError = true }
+                    if (!this.nik) { this.nikError = true }
+                    if (!this.nkk) { this.nkkError = true }
+                    if (!this.ktp) { this.ktpError = true }
+                    if (!this.kk) { this.kkError = true }
+                    if (!this.umur) { this.umurError = true }
+                    if (!this.jenis_kelamin) { this.jenisKelaminError = true }
+                    if (!this.provinsi) { this.provinsiError = true }
+                    if (!this.kota) { this.kotaError = true }
+                    if (!this.kecamatan) { this.kecamatanError = true }
+                    if (!this.kelurahan) { this.kelurahanError = true }
+                    if (!this.alamat) { this.alamatError = true }
+                    if (!this.rt) { this.rtError = true }
+                    if (!this.rw) { this.rwError = true }
+                    if (!this.penghasilan_sebelum) { this.penghasilanSebelumError = true }
+                    if (!this.penghasilan_sesudah) { this.penghasilanSesudahError = true }
+                    if (!this.alasan.length) { this.alasanError = true }
+                    if (!this.konfirmasi) { this.konfirmasiError = true }
+                },
+                handleSubmit() {
+                    // console.log(this.nama, this.nik, this.nkk, this.ktp, this.kk, this.umur, this.jenis_kelamin, this.provinsi, this.kota, this.kecamatan, this.kelurahan, this.alamat, this.rt, this.rw, this.penghasilan_sebelum, this.penghasilan_sesudah, this.alasan, this.konfirmasi)
+                },
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
